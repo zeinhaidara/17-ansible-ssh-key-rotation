@@ -1,0 +1,32 @@
+---
+# Users and their authorized public keys, as sourced from the central
+# key inventory. In a real fleet this would come from a secrets manager
+# or an identity provider export, not a static var file.
+ssh_key_rotation_users:
+  - name: deployer
+    authorized_keys: []
+
+# Host key types to rotate. ed25519 only by default; add rsa/ecdsa if a
+# fleet still needs them for legacy clients.
+ssh_key_rotation_host_key_types:
+  - ed25519
+
+# Where sshd keeps its host keys on the target.
+ssh_key_rotation_ssh_dir: /etc/ssh
+
+# Where rotated-out host keys are archived on the target before removal.
+ssh_key_rotation_backup_dir: /etc/ssh/rotated-keys
+
+# Local path (on the control node) for the central key inventory this
+# role appends rotation records to.
+ssh_key_rotation_inventory_path: "{{ playbook_dir }}/inventory/ssh_key_inventory.json"
+
+# If true, rotate host keys even when one of the configured types
+# already exists. If false, only generate missing types.
+ssh_key_rotation_force_host_key_rotation: false
+
+# Notification webhook. Defaults to a local sink so the role never makes
+# a real network call unless explicitly pointed at one.
+ssh_key_rotation_notify_url: "http://localhost:9/ssh-key-rotation-notify"
+ssh_key_rotation_notify_enabled: false
+ssh_key_rotation_owner_email: "ops@example.com"

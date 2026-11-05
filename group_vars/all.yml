@@ -1,0 +1,13 @@
+---
+# example override - a real fleet would source this from a secrets
+# manager export rather than committing keys to the repo
+ssh_key_rotation_users:
+  - name: deployer
+    authorized_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGVxYW1wbGVrZXlleGFtcGxla2V5ZXhhbXBsZWtleTEy deployer@example.com"
+  - name: oncall
+    authorized_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGVxYW1wbGVrZXlleGFtcGxla2V5ZXhhbXBsZWtleTM0 oncall@example.com"
+
+ssh_key_rotation_owner_email: "ops@example.com"
+ssh_key_rotation_notify_enabled: false
