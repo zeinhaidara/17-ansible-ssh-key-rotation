@@ -1,5 +1,5 @@
 ---
-- name: notify owner of key rotation
+- name: Notify owner of key rotation
   ansible.builtin.uri:
     url: "{{ ssh_key_rotation_notify_url }}"
     method: POST
@@ -14,7 +14,7 @@
   register: ssh_key_rotation_notify_result
   failed_when: false
 
-- name: warn if notification failed
+- name: Warn if notification failed
   ansible.builtin.debug:
     msg: >-
       warning: rotation notification for {{ inventory_hostname }} did not succeed

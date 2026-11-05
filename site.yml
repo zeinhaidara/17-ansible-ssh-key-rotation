@@ -1,5 +1,5 @@
 ---
-- name: rotate ssh host keys and authorized_keys
+- name: Rotate ssh host keys and authorized_keys
   hosts: fleet
   become: true
   roles:
