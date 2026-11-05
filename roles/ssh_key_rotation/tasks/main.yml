@@ -1,15 +1,13 @@
 ---
-- name: rotate ssh host keys
+- name: Rotate ssh host keys
   include_tasks: host_keys.yml
 
-- name: reconcile authorized_keys from central inventory
+- name: Reconcile authorized_keys from central inventory
   include_tasks: authorized_keys.yml
 
-- name: record rotation in central inventory
+- name: Record rotation in central inventory
   include_tasks: inventory_update.yml
-  delegate_to: localhost
-  run_once: false
 
-- name: notify owners of rotation
+- name: Notify owners of rotation
   include_tasks: notify.yml
   when: ssh_key_rotation_notify_enabled | bool
