@@ -20,4 +20,4 @@
       warning: rotation notification for {{ inventory_hostname }} did not succeed
       ({{ ssh_key_rotation_notify_result.msg | default('no response') }}); rotation itself
       still completed.
-  when: ssh_key_rotation_notify_result.failed | default(true)
+  when: (ssh_key_rotation_notify_result.status | default(-1) | int) not in [200, 201, 202, 204]
