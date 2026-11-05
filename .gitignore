@@ -1,0 +1,5 @@
+﻿.dev-context/
+.DS_Store
+*.swp
+*.retry
+.vault_pass
