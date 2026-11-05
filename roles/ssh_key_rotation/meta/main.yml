@@ -1,6 +1,7 @@
 ---
 galaxy_info:
   role_name: ssh_key_rotation
+  author: code-clinic
   description: rotates ssh host keys and authorized_keys across a fleet
   license: MIT
   min_ansible_version: "2.15"
