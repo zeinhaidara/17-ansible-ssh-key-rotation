@@ -9,9 +9,9 @@ management platform. It targets hosts you already manage over SSH with an
 existing Ansible inventory. There's no real cloud or ticketing integration:
 the "central inventory" is a JSON file on the control node, and "notify
 owners" is a single `uri` POST to a configurable webhook URL (disabled by
-default). CI never touches a real host or network endpoint — it validates
-syntax, lints, and unit-tests the pure-python merge/diff logic the role
-relies on. Actually rotating keys against live infrastructure is a manual,
+default). CI validates syntax, lints, unit-tests the pure-python merge/diff
+logic, and exercises notification tasks against a loopback HTTP server.
+It never connects to the managed fleet. Actually rotating keys against live infrastructure is a manual,
 reviewed operation, not something this repo runs unattended.
 
 ## Architecture
@@ -85,6 +85,9 @@ ssh_key_rotation_owner_email: "ops@example.com"
 
 ## Security considerations
 
+- SSH host-key checking stays enabled. Trust the existing host fingerprints
+  before connecting. After rotation, verify replacement fingerprints through
+  a trusted channel before updating the control node's `known_hosts`.
 - Host keys are rotated by removing the old key and generating a new one
   with `community.crypto.openssh_keypair` — private key material never
   leaves the target host.
@@ -119,7 +122,7 @@ ansible-galaxy collection install -r requirements.yml
 yamllint .
 ansible-lint
 ansible-playbook site.yml --syntax-check
-pytest tests/test_filters.py
+pytest tests
 ```
 
 The filter-plugin tests cover the merge logic directly, including the
@@ -127,4 +130,7 @@ negative cases: a stale key being dropped, an unchanged set reporting no
 change, and blank lines being ignored. There's no mocked-cluster or
 mocked-cloud test here — the role only ever talks to hosts in your
 Ansible inventory over SSH, which CI does not have, so the playbook
-itself is validated by syntax-check and lint rather than a live run.
+itself is validated by syntax-check and lint rather than a live fleet run.
+Notification tests execute the actual task file against a local HTTP server:
+success produces no warning, while HTTP 500 and a disconnected response
+both produce a warning without failing the playbook.
