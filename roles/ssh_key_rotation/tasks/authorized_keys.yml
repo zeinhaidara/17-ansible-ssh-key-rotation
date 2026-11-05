@@ -1,0 +1,31 @@
+---
+- name: Read current authorized_keys for each managed user
+  ansible.builtin.slurp:
+    src: "~{{ item.name }}/.ssh/authorized_keys"
+  loop: "{{ ssh_key_rotation_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: ssh_key_rotation_current_keys
+  failed_when: false
+
+- name: Report whether authorized_keys will change
+  ansible.builtin.debug:
+    msg: >-
+      {{ item.item.name }}: authorized_keys {{ 'will change' if
+      ((item.content | default('') | b64decode).splitlines() | list
+      | keys_changed(item.item.authorized_keys)) else 'already up to date' }}
+  loop: "{{ ssh_key_rotation_current_keys.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.item.authorized_keys | length > 0
+
+- name: Reconcile authorized_keys for each managed user
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.authorized_keys | join('\n') }}"
+    exclusive: true
+    state: present
+  loop: "{{ ssh_key_rotation_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.authorized_keys | length > 0

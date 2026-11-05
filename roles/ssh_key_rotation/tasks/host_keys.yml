@@ -1,0 +1,62 @@
+---
+- name: Check existing host key fingerprints
+  ansible.builtin.command: ssh-keygen -lf {{ ssh_key_rotation_ssh_dir }}/ssh_host_{{ item }}_key.pub
+  loop: "{{ ssh_key_rotation_host_key_types }}"
+  register: ssh_key_rotation_existing_fingerprints
+  changed_when: false
+  failed_when: false
+
+- name: Ensure backup directory for rotated host keys exists
+  ansible.builtin.file:
+    path: "{{ ssh_key_rotation_backup_dir }}"
+    state: directory
+    mode: "0700"
+    owner: root
+    group: root
+
+- name: Back up current host key before rotation
+  ansible.builtin.copy:
+    src: "{{ ssh_key_rotation_ssh_dir }}/ssh_host_{{ item.item }}_key"
+    dest: "{{ ssh_key_rotation_backup_dir }}/ssh_host_{{ item.item }}_key.{{ ansible_date_time.iso8601_basic_short }}"
+    remote_src: true
+    mode: "0600"
+    owner: root
+    group: root
+  loop: "{{ ssh_key_rotation_existing_fingerprints.results }}"
+  when:
+    - item.rc == 0
+    - ssh_key_rotation_force_host_key_rotation | bool
+
+- name: Remove private half of host key before regeneration
+  ansible.builtin.file:
+    path: "{{ ssh_key_rotation_ssh_dir }}/ssh_host_{{ item.item }}_key"
+    state: absent
+  loop: "{{ ssh_key_rotation_existing_fingerprints.results }}"
+  when:
+    - item.rc == 0
+    - ssh_key_rotation_force_host_key_rotation | bool
+
+- name: Remove public half of host key before regeneration
+  ansible.builtin.file:
+    path: "{{ ssh_key_rotation_ssh_dir }}/ssh_host_{{ item.item }}_key.pub"
+    state: absent
+  loop: "{{ ssh_key_rotation_existing_fingerprints.results }}"
+  when:
+    - item.rc == 0
+    - ssh_key_rotation_force_host_key_rotation | bool
+
+- name: Generate host keys (missing or just rotated)
+  community.crypto.openssh_keypair:
+    path: "{{ ssh_key_rotation_ssh_dir }}/ssh_host_{{ item }}_key"
+    type: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop: "{{ ssh_key_rotation_host_key_types }}"
+  notify: Restart sshd
+
+- name: Read new host key fingerprints
+  ansible.builtin.command: ssh-keygen -lf {{ ssh_key_rotation_ssh_dir }}/ssh_host_{{ item }}_key.pub
+  loop: "{{ ssh_key_rotation_host_key_types }}"
+  register: ssh_key_rotation_new_fingerprints
+  changed_when: false

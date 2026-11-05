@@ -3,3 +3,7 @@
 *.swp
 *.retry
 .vault_pass
+__pycache__/
+*.pyc
+.pytest_cache/
+inventory/ssh_key_inventory.json

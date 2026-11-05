@@ -1,0 +1,13 @@
+---
+- name: Rotate ssh host keys
+  ansible.builtin.include_tasks: host_keys.yml
+
+- name: Reconcile authorized_keys from central inventory
+  ansible.builtin.include_tasks: authorized_keys.yml
+
+- name: Record rotation in central inventory
+  ansible.builtin.include_tasks: inventory_update.yml
+
+- name: Notify owners of rotation
+  ansible.builtin.include_tasks: notify.yml
+  when: ssh_key_rotation_notify_enabled | bool
