@@ -4,7 +4,13 @@
   loop: "{{ ssh_key_rotation_host_key_types }}"
   register: ssh_key_rotation_existing_fingerprints
   changed_when: false
-  failed_when: false
+  # ssh-keygen's error text for a missing key file is "No such file or directory" (confirmed by
+  # running it against a missing path) - that's the one expected, safe case (a fresh host with no
+  # key of this type yet). Anything else (permission denied, a corrupt key, ...) is a real
+  # failure and must fail the play, not disappear silently.
+  failed_when:
+    - ssh_key_rotation_existing_fingerprints.rc != 0
+    - "'No such file or directory' not in (ssh_key_rotation_existing_fingerprints.stderr | default(''))"
 
 - name: Ensure backup directory for rotated host keys exists
   ansible.builtin.file:
