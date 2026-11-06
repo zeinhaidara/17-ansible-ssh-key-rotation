@@ -1,23 +1,27 @@
 ---
+# Notification must never fail the rotation itself - a webhook being down is not a reason to
+# leave host keys half-rotated. That's handled with an explicit rescue (not failed_when: false),
+# so every failure - bad status, refused connection, timeout, anything - is caught, reported with
+# the host name and whatever HTTP status is available, and never silently dropped.
 - name: Notify owner of key rotation
-  ansible.builtin.uri:
-    url: "{{ ssh_key_rotation_notify_url }}"
-    method: POST
-    body_format: json
-    body:
-      host: "{{ inventory_hostname }}"
-      owner_email: "{{ ssh_key_rotation_owner_email }}"
-      rotated_at: "{{ ansible_date_time.iso8601 }}"
-      host_key_fingerprints: "{{ ssh_key_rotation_new_fingerprints.results | map(attribute='stdout') | list }}"
-    status_code: [200, 201, 202, 204]
   delegate_to: localhost
-  register: ssh_key_rotation_notify_result
-  failed_when: false
-
-- name: Warn if notification failed
-  ansible.builtin.debug:
-    msg: >-
-      warning: rotation notification for {{ inventory_hostname }} did not succeed
-      ({{ ssh_key_rotation_notify_result.msg | default('no response') }}); rotation itself
-      still completed.
-  when: (ssh_key_rotation_notify_result.status | default(-1) | int) not in [200, 201, 202, 204]
+  block:
+    - name: Post rotation notification
+      ansible.builtin.uri:
+        url: "{{ ssh_key_rotation_notify_url }}"
+        method: POST
+        body_format: json
+        body:
+          host: "{{ inventory_hostname }}"
+          owner_email: "{{ ssh_key_rotation_owner_email }}"
+          rotated_at: "{{ ansible_date_time.iso8601 }}"
+          host_key_fingerprints: "{{ ssh_key_rotation_new_fingerprints.results | map(attribute='stdout') | list }}"
+        status_code: [200, 201, 202, 204]
+      register: ssh_key_rotation_notify_result
+  rescue:
+    - name: Warn if notification failed
+      ansible.builtin.debug:
+        msg: >-
+          warning: rotation notification for {{ inventory_hostname }} did not succeed
+          (http status: {{ ssh_key_rotation_notify_result.status | default('no response') }});
+          rotation itself still completed.

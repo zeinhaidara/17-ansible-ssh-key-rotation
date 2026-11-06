@@ -6,7 +6,13 @@
   loop_control:
     label: "{{ item.name }}"
   register: ssh_key_rotation_current_keys
-  failed_when: false
+  # slurp's own message on a missing file is exactly "File not found: <path>" (confirmed from
+  # the ansible-core module source) - that's the one expected, safe case (a user with no
+  # authorized_keys file yet). Anything else (permission denied, a directory in its place, ...)
+  # is a real failure and must fail the play, not disappear silently.
+  failed_when:
+    - ssh_key_rotation_current_keys is failed
+    - "'File not found' not in (ssh_key_rotation_current_keys.msg | default(''))"
 
 - name: Report whether authorized_keys will change
   ansible.builtin.debug:
