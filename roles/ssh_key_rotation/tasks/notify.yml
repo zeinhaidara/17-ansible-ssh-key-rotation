@@ -4,6 +4,7 @@
 # so every failure - bad status, refused connection, timeout, anything - is caught, reported with
 # the host name and whatever HTTP status is available, and never silently dropped.
 - name: Notify owner of key rotation
+  delegate_to: localhost
   block:
     - name: Post rotation notification
       ansible.builtin.uri:
@@ -24,4 +25,3 @@
           warning: rotation notification for {{ inventory_hostname }} did not succeed
           (http status: {{ ssh_key_rotation_notify_result.status | default('no response') }});
           rotation itself still completed.
-  delegate_to: localhost
