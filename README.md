@@ -134,3 +134,10 @@ itself is validated by syntax-check and lint rather than a live fleet run.
 Notification tests execute the actual task file against a local HTTP server:
 success produces no warning, while HTTP 500 and a disconnected response
 both produce a warning without failing the playbook.
+
+Two failure paths are untested: `authorized_keys.yml`'s "no authorized_keys
+file yet" case and `host_keys.yml`'s "no host key of this type yet" case.
+Both now fail loudly on anything *other* than that one expected message
+(see the `failed_when` conditions in each file), but exercising the
+expected-message path itself would mean standing up a real filesystem/SSH
+target with specific files missing - more than this repo's scope covers.
