@@ -1,4 +1,4 @@
-# ssh-key-rotation
+# SSH key rotation role
 
 An Ansible role that rotates SSH host keys and `authorized_keys` across a
 fleet, records what it did in a central key inventory file, and optionally
@@ -114,7 +114,7 @@ ssh_key_rotation_owner_email: "ops@example.com"
 - The central inventory merge replaces only the entry for the current host
   each run, so re-running does not duplicate or accumulate records.
 
-## Tests
+## Validation
 
 ```bash
 pip install -r requirements-test.txt

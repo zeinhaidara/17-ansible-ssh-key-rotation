@@ -1,4 +1,4 @@
-﻿.dev-context/
+.dev-context/
 .DS_Store
 *.swp
 *.retry
@@ -7,3 +7,5 @@ __pycache__/
 *.pyc
 .pytest_cache/
 inventory/ssh_key_inventory.json
+*.tfplan
+memory/
