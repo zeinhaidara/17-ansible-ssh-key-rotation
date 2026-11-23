@@ -4,6 +4,11 @@ An Ansible role that rotates SSH host keys and `authorized_keys` across a
 fleet, records what it did in a central key inventory file, and optionally
 notifies owners over a webhook.
 
+Why it matters: SSH keys that never change, and `authorized_keys` files that
+only ever grow, leave old access in place long after people and machines
+have moved on. Rotating on a schedule, and removing keys that are no longer
+wanted, keeps access tied to the current list.
+
 **Scope.** This is a role plus a thin orchestration playbook, not a fleet
 management platform. It targets hosts you already manage over SSH with an
 existing Ansible inventory. There's no real cloud or ticketing integration:
@@ -141,3 +146,11 @@ Both now fail loudly on anything *other* than that one expected message
 (see the `failed_when` conditions in each file), but exercising the
 expected-message path itself would mean standing up a real filesystem/SSH
 target with specific files missing - more than this repo's scope covers.
+
+## Known limitations
+
+- Never run against a real fleet. The playbook is checked by lint and
+  syntax-check only.
+- The central inventory is a JSON file on the control node, not a database.
+- Notification is a single webhook POST; there is no ticketing integration.
+- The two failure paths above are not tested.
